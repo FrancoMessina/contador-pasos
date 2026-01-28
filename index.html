@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merce vs Patri - El Duelo de Pasos</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">👟</span>
+                <h1>Merce <span class="vs">VS</span> Patri</h1>
+            </div>
+            <p class="tagline">El juego de pasos, constancia y prendas</p>
+        </header>
+
+        <!-- Scoreboard Principal -->
+        <section class="scoreboard">
+            <div class="player-card merce">
+                <div class="player-avatar">
+                    <img src="img/merce.jpg" alt="Merce" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=Merce&backgroundColor=ffdfbf'">
+                    <div class="crown hidden" id="crown-merce">👑</div>
+                </div>
+                <h2 class="player-name">Merce</h2>
+                <div class="player-stats">
+                    <div class="stat">
+                        <span class="stat-value" id="merce-steps-today">0</span>
+                        <span class="stat-label">Pasos hoy</span>
+                    </div>
+                    <div class="stat highlight">
+                        <span class="stat-value" id="merce-points-today">0</span>
+                        <span class="stat-label">Puntos hoy</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="merce-streak">0</span>
+                        <span class="stat-label">🔥 Racha</span>
+                    </div>
+                </div>
+                <div class="weekly-points">
+                    <span class="weekly-label">Puntos semanales</span>
+                    <span class="weekly-value" id="merce-weekly">0</span>
+                </div>
+            </div>
+
+            <div class="vs-divider">
+                <div class="vs-circle">
+                    <span>VS</span>
+                </div>
+                <div class="score-difference" id="score-diff"></div>
+            </div>
+
+            <div class="player-card patri">
+                <div class="player-avatar">
+                    <img src="img/patri.jpg" alt="Patri" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=Patri&backgroundColor=c0aede'">
+                    <div class="crown hidden" id="crown-patri">👑</div>
+                </div>
+                <h2 class="player-name">Patri</h2>
+                <div class="player-stats">
+                    <div class="stat">
+                        <span class="stat-value" id="patri-steps-today">0</span>
+                        <span class="stat-label">Pasos hoy</span>
+                    </div>
+                    <div class="stat highlight">
+                        <span class="stat-value" id="patri-points-today">0</span>
+                        <span class="stat-label">Puntos hoy</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="patri-streak">0</span>
+                        <span class="stat-label">🔥 Racha</span>
+                    </div>
+                </div>
+                <div class="weekly-points">
+                    <span class="weekly-label">Puntos semanales</span>
+                    <span class="weekly-value" id="patri-weekly">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mensaje dinámico -->
+        <div class="dynamic-message" id="dynamic-message">
+            <span class="message-icon">💪</span>
+            <span class="message-text">¡Que empiece el duelo!</span>
+        </div>
+
+        <!-- Registro de pasos -->
+        <section class="register-section">
+            <h3>📝 Registrar pasos</h3>
+            <div class="register-form">
+                <div class="input-group">
+                    <label for="date-input">Fecha</label>
+                    <input type="date" id="date-input">
+                </div>
+                <div class="input-group">
+                    <label for="merce-input">Pasos de Merce</label>
+                    <input type="number" id="merce-input" placeholder="Ej: 8400" min="0" max="50000">
+                </div>
+                <div class="input-group">
+                    <label for="patri-input">Pasos de Patri</label>
+                    <input type="number" id="patri-input" placeholder="Ej: 7200" min="0" max="50000">
+                </div>
+                <button class="btn-register" id="btn-register">
+                    <span>Registrar</span>
+                    <span class="btn-icon">✨</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Tabs de navegación -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="weekly">📅 Semanal</button>
+            <button class="tab" data-tab="monthly">📆 Mensual</button>
+            <button class="tab" data-tab="achievements">🏆 Logros</button>
+            <button class="tab" data-tab="history">📊 Historial</button>
+        </nav>
+
+        <!-- Contenido de tabs -->
+        <div class="tab-content">
+            <!-- Tab Semanal -->
+            <section class="tab-panel active" id="tab-weekly">
+                <div class="week-header">
+                    <h3>Semana actual</h3>
+                    <span class="week-dates" id="week-dates">Lunes - Domingo</span>
+                </div>
+                <div class="week-progress">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar merce-bar" id="merce-progress" style="width: 50%"></div>
+                        <div class="progress-bar patri-bar" id="patri-progress" style="width: 50%"></div>
+                    </div>
+                    <div class="progress-labels">
+                        <span class="merce-label">Merce: <strong id="merce-week-pts">0</strong> pts</span>
+                        <span class="patri-label">Patri: <strong id="patri-week-pts">0</strong> pts</span>
+                    </div>
+                </div>
+                <div class="week-days" id="week-days">
+                    <!-- Se genera dinámicamente -->
+                </div>
+                <div class="prenda-section">
+                    <h4>😈 Prenda de la semana</h4>
+                    <div class="prenda-card">
+                        <input type="text" id="prenda-input" placeholder="Ej: Cocinar algo elegido por la ganadora">
+                        <button class="btn-prenda" id="btn-prenda">Guardar</button>
+                    </div>
+                    <p class="prenda-actual" id="prenda-actual">Sin prenda definida</p>
+                </div>
+            </section>
+
+            <!-- Tab Mensual -->
+            <section class="tab-panel" id="tab-monthly">
+                <div class="month-header">
+                    <h3 id="current-month">Enero 2026</h3>
+                </div>
+                <div class="monthly-standings">
+                    <div class="standing-card">
+                        <div class="standing-position">1º</div>
+                        <div class="standing-info">
+                            <span class="standing-name" id="monthly-leader">-</span>
+                            <span class="standing-pts" id="monthly-leader-pts">0 puntos</span>
+                        </div>
+                        <div class="standing-badge">🏆</div>
+                    </div>
+                    <div class="standing-card second">
+                        <div class="standing-position">2º</div>
+                        <div class="standing-info">
+                            <span class="standing-name" id="monthly-second">-</span>
+                            <span class="standing-pts" id="monthly-second-pts">0 puntos</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="weeks-won">
+                    <h4>Semanas ganadas este mes</h4>
+                    <div class="weeks-won-grid" id="weeks-won-grid">
+                        <!-- Se genera dinámicamente -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab Logros -->
+            <section class="tab-panel" id="tab-achievements">
+                <h3>🎯 Logros y Desafíos</h3>
+                <div class="achievements-grid" id="achievements-grid">
+                    <!-- Se genera dinámicamente -->
+                </div>
+            </section>
+
+            <!-- Tab Historial -->
+            <section class="tab-panel" id="tab-history">
+                <h3>📊 Historial de registros</h3>
+                <div class="history-list" id="history-list">
+                    <!-- Se genera dinámicamente -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Hecho con 💜 para motivar el movimiento diario</p>
+            <div class="footer-actions">
+                <button class="btn-secondary" id="btn-import">📥 Importar JSON</button>
+                <button class="btn-secondary" id="btn-export">📤 Exportar datos</button>
+                <button class="btn-secondary btn-danger" id="btn-reset">🗑️ Reiniciar todo</button>
+            </div>
+            <input type="file" id="file-import" accept=".json" style="display: none;">
+        </footer>
+    </div>
+
+    <!-- Modal de celebración -->
+    <div class="modal hidden" id="celebration-modal">
+        <div class="modal-content">
+            <div class="confetti" id="confetti"></div>
+            <h2 id="celebration-title">🎉 ¡Felicidades!</h2>
+            <p id="celebration-text">Has ganado el día</p>
+            <button class="btn-register" id="btn-close-modal">¡Genial!</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
