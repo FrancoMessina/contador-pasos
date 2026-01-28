@@ -100,21 +100,41 @@ const Utils = {
 // GESTIÓN DE DATOS
 // ========================================
 const DataManager = {
-    // Guardar estado en localStorage
-    save() {
-        localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state));
+    // Guardar estado en servidor
+    async save() {
+        try {
+            await fetch('/api/data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(state)
+            });
+        } catch (error) {
+            console.error('Error guardando datos en servidor:', error);
+            // Fallback a localStorage
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state));
+        }
     },
 
-    // Cargar estado desde localStorage
-    load() {
-        const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
-        if (saved) {
-            state = { ...state, ...JSON.parse(saved) };
+    // Cargar estado desde servidor
+    async load() {
+        try {
+            const response = await fetch('/api/data');
+            if (response.ok) {
+                const data = await response.json();
+                state = { ...state, ...data };
+            }
+        } catch (error) {
+            console.error('Error cargando datos del servidor:', error);
+            // Fallback a localStorage
+            const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+            if (saved) {
+                state = { ...state, ...JSON.parse(saved) };
+            }
         }
     },
 
     // Agregar registro diario
-    addRecord(date, merceSteps, patriSteps) {
+    async addRecord(date, merceSteps, patriSteps) {
         // Eliminar registro existente del mismo día
         state.records = state.records.filter(r => r.date !== date);
         
@@ -138,7 +158,7 @@ const DataManager = {
         state.records.push(record);
         state.records.sort((a, b) => new Date(b.date) - new Date(a.date));
         
-        this.save();
+        await this.save();
         return record;
     },
 
@@ -204,9 +224,9 @@ const DataManager = {
     },
 
     // Guardar prenda semanal
-    savePrenda(prenda) {
+    async savePrenda(prenda) {
         state.weeklyPrenda = prenda;
-        this.save();
+        await this.save();
     },
 
     // Exportar datos
@@ -215,7 +235,7 @@ const DataManager = {
     },
 
     // Importar datos desde JSON
-    importData(jsonData) {
+    async importData(jsonData) {
         try {
             const imported = JSON.parse(jsonData);
             
@@ -252,7 +272,7 @@ const DataManager = {
             // Ordenar registros por fecha descendente
             state.records.sort((a, b) => new Date(b.date) - new Date(a.date));
             
-            this.save();
+            await this.save();
             return { success: true, count: state.records.length };
         } catch (error) {
             return { success: false, error: error.message };
@@ -260,12 +280,12 @@ const DataManager = {
     },
 
     // Importar solo pasos (formato simplificado)
-    importSimpleData(data) {
+    async importSimpleData(data) {
         try {
             const lines = data.trim().split('\n');
             let imported = 0;
             
-            lines.forEach(line => {
+            for (const line of lines) {
                 // Formato esperado: YYYY-MM-DD,pasosMerce,pasosPatri
                 const parts = line.split(',').map(p => p.trim());
                 if (parts.length >= 3) {
@@ -274,11 +294,11 @@ const DataManager = {
                     const patriSteps = parseInt(parts[2]) || 0;
                     
                     if (date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                        this.addRecord(date, merceSteps, patriSteps);
+                        await this.addRecord(date, merceSteps, patriSteps);
                         imported++;
                     }
                 }
-            });
+            }
             
             return { success: true, count: imported };
         } catch (error) {
@@ -287,14 +307,14 @@ const DataManager = {
     },
 
     // Resetear todo
-    reset() {
+    async reset() {
         state = {
             records: [],
             weeklyPrenda: '',
             achievements: {},
             monthlyWinners: []
         };
-        this.save();
+        await this.save();
     }
 };
 
@@ -641,7 +661,7 @@ function initEventListeners() {
     dateInput.value = Utils.getToday();
     
     // Registrar pasos
-    document.getElementById('btn-register').addEventListener('click', () => {
+    document.getElementById('btn-register').addEventListener('click', async () => {
         const dateInput = document.getElementById('date-input');
         const merceInput = document.getElementById('merce-input');
         const patriInput = document.getElementById('patri-input');
@@ -655,7 +675,7 @@ function initEventListeners() {
             return;
         }
         
-        const record = DataManager.addRecord(selectedDate, merceSteps, patriSteps);
+        const record = await DataManager.addRecord(selectedDate, merceSteps, patriSteps);
         
         // Limpiar inputs de pasos (mantener fecha)
         merceInput.value = '';
@@ -689,10 +709,10 @@ function initEventListeners() {
     });
 
     // Guardar prenda
-    document.getElementById('btn-prenda').addEventListener('click', () => {
+    document.getElementById('btn-prenda').addEventListener('click', async () => {
         const prenda = document.getElementById('prenda-input').value.trim();
         if (prenda) {
-            DataManager.savePrenda(prenda);
+            await DataManager.savePrenda(prenda);
             document.getElementById('prenda-input').value = '';
             document.getElementById('prenda-actual').textContent = prenda;
         }
@@ -715,10 +735,10 @@ function initEventListeners() {
     });
 
     // Resetear todo
-    document.getElementById('btn-reset').addEventListener('click', () => {
+    document.getElementById('btn-reset').addEventListener('click', async () => {
         if (confirm('¿Estás segura de que quieres borrar TODOS los datos? Esta acción no se puede deshacer.')) {
             if (confirm('¿REALMENTE segura? Se perderán todos los registros, rachas y logros.')) {
-                DataManager.reset();
+                await DataManager.reset();
                 UI.update();
                 alert('Datos reiniciados. ¡A empezar de nuevo!');
             }
@@ -735,8 +755,8 @@ function initEventListeners() {
         if (!file) return;
         
         const reader = new FileReader();
-        reader.onload = (event) => {
-            const result = DataManager.importData(event.target.result);
+        reader.onload = async (event) => {
+            const result = await DataManager.importData(event.target.result);
             if (result.success) {
                 UI.update();
                 alert(`✅ ¡Importación exitosa! Se cargaron ${result.count} registros.`);
@@ -763,8 +783,8 @@ function initEventListeners() {
 // ========================================
 // INICIALIZACIÓN
 // ========================================
-function init() {
-    DataManager.load();
+async function init() {
+    await DataManager.load();
     initEventListeners();
     UI.update();
     
