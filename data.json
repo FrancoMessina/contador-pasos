@@ -1,6 +1,20 @@
 {
-  "records": [],
-  "weeklyPrenda": "",
+  "records": [
+    {
+      "date": "2026-01-28",
+      "merce": {
+        "steps": 13854,
+        "points": 13,
+        "bonus": 1
+      },
+      "patri": {
+        "steps": 9980,
+        "points": 9,
+        "bonus": 0
+      }
+    }
+  ],
+  "weeklyPrenda": "El que pierde cocina toda una semana",
   "achievements": {},
   "monthlyWinners": []
 }
