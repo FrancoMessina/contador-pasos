@@ -100,8 +100,21 @@ const Utils = {
 // GESTIÓN DE DATOS
 // ========================================
 const DataManager = {
-    // Guardar estado en servidor
+    // Detectar si estamos en GitHub Pages (hosting estático)
+    isStaticHosting() {
+        return window.location.hostname.includes('github.io') || 
+               window.location.protocol === 'file:';
+    },
+
+    // Guardar estado
     async save() {
+        // En GitHub Pages solo podemos usar localStorage
+        if (this.isStaticHosting()) {
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state));
+            return;
+        }
+
+        // En servidor local, intentar guardar en el backend
         try {
             await fetch('/api/data', {
                 method: 'POST',
@@ -115,21 +128,28 @@ const DataManager = {
         }
     },
 
-    // Cargar estado desde servidor
+    // Cargar estado
     async load() {
+        // Primero intentar cargar desde localStorage
+        const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+        if (saved) {
+            state = { ...state, ...JSON.parse(saved) };
+            console.log('📱 Datos cargados desde localStorage');
+            return;
+        }
+
+        // Si no hay datos en localStorage, cargar datos iniciales desde data.json
         try {
-            const response = await fetch('/api/data');
+            const response = await fetch(this.isStaticHosting() ? 'data.json' : '/api/data');
             if (response.ok) {
                 const data = await response.json();
                 state = { ...state, ...data };
+                // Guardar en localStorage para futuras cargas
+                localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state));
+                console.log('📥 Datos iniciales cargados desde archivo');
             }
         } catch (error) {
-            console.error('Error cargando datos del servidor:', error);
-            // Fallback a localStorage
-            const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
-            if (saved) {
-                state = { ...state, ...JSON.parse(saved) };
-            }
+            console.error('Error cargando datos:', error);
         }
     },
 
