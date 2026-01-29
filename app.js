@@ -12,8 +12,7 @@ const CONFIG = {
     MIN_DAILY_STEPS: 5000,       // Mínimo recomendado
     MAX_DAILY_STEPS: 20000,      // Máximo contable
     BONUS_10K: 1,                // Bonus por superar 10k pasos
-    BONUS_7_DAYS_8K: 2,          // Bonus por 7 días seguidos con 8k+
-    STORAGE_KEY: 'merceVsPatri'
+    BONUS_7_DAYS_8K: 2           // Bonus por 7 días seguidos con 8k+
 };
 
 // ========================================
@@ -35,9 +34,13 @@ const Utils = {
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     },
 
-    // Obtener fecha actual en formato YYYY-MM-DD
+    // Obtener fecha actual en formato YYYY-MM-DD (hora local)
     getToday() {
-        return new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     },
 
     // Obtener el lunes de la semana actual
@@ -100,53 +103,20 @@ const Utils = {
 // GESTIÓN DE DATOS
 // ========================================
 const DataManager = {
-    // Detectar si estamos en GitHub Pages (hosting estático)
-    isStaticHosting() {
-        return window.location.hostname.includes('github.io') || 
-               window.location.protocol === 'file:';
-    },
-
-    // Guardar estado
+    // Guardar estado (no hace nada en hosting estático)
     async save() {
-        // En GitHub Pages solo podemos usar localStorage
-        if (this.isStaticHosting()) {
-            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state));
-            return;
-        }
-
-        // En servidor local, intentar guardar en el backend
-        try {
-            await fetch('/api/data', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(state)
-            });
-        } catch (error) {
-            console.error('Error guardando datos en servidor:', error);
-            // Fallback a localStorage
-            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state));
-        }
+        // En GitHub Pages no podemos guardar, solo mostrar
+        console.log('📝 Estado actualizado (solo en memoria)');
     },
 
-    // Cargar estado
+    // Cargar estado desde data.json
     async load() {
-        // Primero intentar cargar desde localStorage
-        const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
-        if (saved) {
-            state = { ...state, ...JSON.parse(saved) };
-            console.log('📱 Datos cargados desde localStorage');
-            return;
-        }
-
-        // Si no hay datos en localStorage, cargar datos iniciales desde data.json
         try {
-            const response = await fetch(this.isStaticHosting() ? 'data.json' : '/api/data');
+            const response = await fetch('data.json');
             if (response.ok) {
                 const data = await response.json();
                 state = { ...state, ...data };
-                // Guardar en localStorage para futuras cargas
-                localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state));
-                console.log('📥 Datos iniciales cargados desde archivo');
+                console.log('📥 Datos cargados desde data.json');
             }
         } catch (error) {
             console.error('Error cargando datos:', error);
@@ -195,7 +165,10 @@ const DataManager = {
         for (let i = 0; i < 365; i++) {
             const checkDate = new Date(today);
             checkDate.setDate(today.getDate() - i);
-            const dateStr = checkDate.toISOString().split('T')[0];
+            const year = checkDate.getFullYear();
+            const month = String(checkDate.getMonth() + 1).padStart(2, '0');
+            const day = String(checkDate.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
             
             const record = state.records.find(r => r.date === dateStr);
             if (record && record[player].steps >= CONFIG.MIN_DAILY_STEPS) {
